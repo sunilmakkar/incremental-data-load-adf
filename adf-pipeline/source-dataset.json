@@ -1,0 +1,33 @@
+{
+    "name": "SourceDataset",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "AzureSqlDatabase1",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [
+            {
+                "name": "ProductID",
+                "type": "int",
+                "precision": 10
+            },
+            {
+                "name": "ProductName",
+                "type": "varchar"
+            },
+            {
+                "name": "LastModifyTime",
+                "type": "datetime",
+                "precision": 23,
+                "scale": 3
+            }
+        ],
+        "typeProperties": {
+            "schema": "dbo",
+            "table": "product_data"
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}
