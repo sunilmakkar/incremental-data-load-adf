@@ -1,0 +1,41 @@
+-- Create table of sample product data. Insert sample values into sample table.
+CREATE TABLE product_data
+(
+    ProductID int,
+    ProductName varchar(255),
+    LastModifyTime datetime
+);
+
+INSERT INTO product_data
+(ProductID, ProductName, LastModifyTime)
+VALUES
+(1, 'UltraHD 4K Television','2021-07-15 10:30:00 AM'),
+(2, 'Bluetooth Stereo Headphones','2021-07-16 11:45:00 AM'),
+(3, 'Smartphone 128GB','2021-07-17 01:10:00 PM'),
+(4, 'Wireless Charging Pad','2021-07-18 02:25:00 PM'),
+(5, 'Noise Cancelling Earbuds','2021-07-19 03:40:00 PM'),
+(6, 'Portable External SSD 1TB','2021-07-20 08:15:00 AM'),
+(7, 'Smartwatch Fitness Tracker','2021-07-21 09:50:00 AM'),
+(8, 'Gaming Laptop 16GB RAM','2021-07-22 04:05:00 PM'),
+(9, 'Professional DSLR Camera','2021-07-23 05:20:00 PM'),
+(10, 'Robot Vacuum Cleaner','2021-07-24 07:35:00 PM');
+
+-- Run the following SQL command against your SQL database to create a table named watermarktable to store the watermark value
+CREATE TABLE watermarktable (TableName varchar(255), WatermarkValue datetime);
+
+-- Set the default value of the high watermark with the table name of source data store.
+INSERT INTO watermarktable
+VALUES ('product_data','1/1/2010 12:00:00 AM')
+
+-- Run the following command to create a stored procedure in your SQL database. This will store the most recent data load timestamp into watermark table.
+CREATE PROCEDURE usp_update_watermark @LastModifiedtime datetime, @TableName varchar(50)
+AS
+
+BEGIN
+
+UPDATE watermarktable
+SET [WatermarkValue] = @LastModifiedtime
+WHERE [TableName] = @TableName
+
+END
+
