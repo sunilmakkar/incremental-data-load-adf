@@ -29,7 +29,10 @@ This mini-project demonstrates how to use **Azure Data Factory (ADF)** to create
 ### 3. Datasets
 
 - **Source Dataset**: Represents the Azure SQL Database table containing the data.
-- **Sink Dataset**: Represents the Azure Data Lake destination.
+- **Sink Dataset**: Represents the Azure Data Lake destination with a unique file path:
+```
+@CONCAT('Incremental-', pipeline().RunId, '.txt')
+```
 - **Watermark Dataset**: Tracks the last loaded timestamp for incremental loading.
 
 ### 4. Building the Pipeline
@@ -37,12 +40,36 @@ This mini-project demonstrates how to use **Azure Data Factory (ADF)** to create
 The pipeline consists of several activities to perform incremental data loading:
 
 1. **Lookup Activities**:
-    - **First Lookup**: Retrieves the last loaded **watermark** value from a SQL table.
-    - **Second Lookup**: Retrieves the new watermark value (the most recent change).
-2. **Copy Activity**:
-    - Transfers only new or updated records from **Azure SQL Database** to **Azure Data Lake** based on the retrieved watermark values.
-3. **StoredProcedure Activity**:
+    - **LookUpOldWatermarkActivity**: Retrieves the last loaded watermark value by running this query:
+```
+SELECT * FROM [dbo].[WatermarkTable];
+``` 
+- **LookupNewWatermarkActivity**:Retrieves the new watermark value by running this query:
+```
+SELECT MAX(LastModifyTime) AS NewWatermarkValue FROM [dbo].[product_data];
+```
+2. **Incremental Copy Activity**:
+    - Transfers only new or updated records from Azure SQL Database to Azure Data Lake based on the retrieved watermark values. The query for the source of the Copy Activity is:
+```
+SELECT * FROM [dbo].[product_data] 
+WHERE LastModifytime > '@{activity('LookupOldWaterMarkActivity').output.firstRow.WatermarkValue}' 
+AND LastModifytime <= '@{activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue}'
+```
+4. **StoredProcedure Activity**:
     - Executes a stored procedure to update the **watermark table** with the new load timestamp, ensuring future loads only get new data.
+
+**Stored Procedure Details**:
+
+The stored procedure usp_update_watermark is designed to update the watermark value in a database table, used to track the most recent modification times of various tables.
+
+**Parameters**:
+@LastModifiedtime datetime: The timestamp for the new watermark.
+@TableName varchar(50): The name of the table for which the watermark is being updated.
+The parameter code for the stored procedure is:
+```
+@{activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue}
+@{activity('LookupOldWaterMarkActivity').output.firstRow.TableName}
+```
 
 ### 5. Executing the Pipeline
 
